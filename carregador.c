@@ -19,8 +19,8 @@ int main(int argc, char *argv[]) {
         return 1;
     } 
 
-    int tam_prog = atoi(argv[1]);
-    int count = argc - 2;  // Número total de argumentos fornecidos (sem o tamanho do código)
+    int tam_prog = atoi(argv[1]); //Tamanho do programa
+    int count = argc - 2;  // Número total de argumentos fornecidos (sem o tamanho do código) 
     int blocos[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     for (int i = 0; i < count; i++) {
