@@ -5,11 +5,12 @@ section .data
 
 section .bss
     resto resd 1  ; Reserva um espaço de 4 bytes (1 palavra) para armazenar o valor de eax
-
+    bloco resd 4
 
 section .text
     global procedimentos
     extern printf
+    sub esi, esi
 
 procedimentos:
     push ebp
@@ -49,13 +50,13 @@ procedimentos:
     pop edx
     pop eax
 
+    jmp loop
+ 
 ; Loop para imprimir cada elemento de blocos[]
-soma_loop:
+mostrar_seq:
     cmp ecx, 0         ; Se count == 0, sai do loop
     je fim
 
-    mov ebx, [edx]     ; Pega próximo valor do array blocos[]
-    
     ; Imprime o valor atual de bloco
     push edx
     push eax
@@ -72,7 +73,33 @@ soma_loop:
 
     add edx, 4         ; Avança para o próximo valor no array (incrementa o ponteiro de blocos[])
     dec ecx            ; Decrementa contador
-    jmp soma_loop      ; Repete loop
+    jmp mostrar_seq      ; Repete loop
+
+loop:
+    cmp ecx, 0         ; Se count == 0, sai do loop
+    je fim
+
+    mov eax, [resto]
+
+    mov ebx, [edx + 4]     ; Pega segundo elemento do bloco
+    cmp ebx, eax
+    jg espaco_suficiente
+
+    sub eax, ebx
+    mov [resto], eax
+    add ebx, [edx]
+    mov [bloco + esi*4], ebx
+
+    add edx, 8         ; Avança para o próximo valor bloco (incrementa o ponteiro de blocos[])
+    sub ecx, 2         ; Decrementa o contador duas vezes
+    inc esi            ; Incrementa contador de laço
+    jmp loop      ; Repete loop
+
+espaco_suficiente:
+    mov eax, [edx]
+    add eax, [resto]
+    mov [bloco + esi*4], eax
+    ;mov [resto], 0
 
 fim:
     pop ebp
