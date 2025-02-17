@@ -1,12 +1,20 @@
 section .data
-
-    msg_count db 'count = %d', 10, 0  ; Mensagem para count APAGAAAAAAAAAAAAAAAAAR
-    msg_tam_prog db 'tam_prog = %d', 10, 0  ; Mensagem para tam_prog APAGAAAAAAAAAAAAAAAAAR
-    msg_bloco db 'bloco = %d', 10, 0  ; Mensagem para imprimir os elementos do array APAGAAAAAAAAAAAAAAAAAR
-
     bloco dd 0, 0, 0, 0 ;Endereço final que o programa ocupa no bloco de memória i
     buffer db '0000000000', 0  ; Buffer para armazenar a string (máx. 10 dígitos + NULL)
     newline db 10                     ; Quebra de linha
+    msg_inicio_bloco db "Endereço de início do bloco: ", 0
+    tam_msg_inicio_bloco EQU $-msg_inicio_bloco
+    msg_final_bloco db "Endereço de final do bloco: ", 0
+    tam_msg_final_bloco EQU $-msg_final_bloco
+    numero db '1' '2' '3' '4', 0
+    msg_resto db "Memória do programa restante: ", 0
+    tam_msg_resto EQU $-msg_resto
+
+    msg_final1 db "Toda a memória distribuída!", 0
+    tam_msg_final1 EQU $-msg_final1
+
+    msg_final2 db "Não há memória o sufiente nos blocos!", 0
+    tam_msg_final2 EQU $-msg_final2
 
 section .bss
     resto resd 1  ; Quantidade de memória restante do programa para ser guardada
@@ -14,7 +22,6 @@ section .bss
 
 section .text
     global procedimentos
-    extern printf ; APAGAAAAAAAAAAAAAAAAAR
 
 procedimentos:
     ;Recebendo elementos na pilha
@@ -34,19 +41,14 @@ loop:
     cmp ecx, 0 ; Se count == 0, sai do loop
     je fim
 
-    mov eax, [edx]
+    mov eax, [resto] 
+    call printar_msg_resto
+    call printar_mem
 
-cont2:       
-    push eax
-    push ebx
-    push ecx
-    push edx
-    jmp printar_mem2  ; Printar posição de início da memória (função própria)
-ret2:
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
+    mov eax, [edx] ; Recebe endereço inicial do bloco de memória
+    call printar_msg_inicio
+    ;Printar elemento de início da memória
+    call printar_mem
 
     ;Quando a memória restante do programa for zero, encerrar o programa
     mov eax, [resto]
@@ -58,22 +60,17 @@ ret2:
     cmp ebx, eax
     jg espaco_suficiente
 
+    ;Caso tenha sido preenchido todo espaço da memória do bloco
     sub eax, ebx
     mov [resto], eax
     add ebx, [edx]
 
+    ;Printar endereço final do bloco de memória
+
 cont:
-    push eax
-    push ebx
-    push ecx
-    push edx
+    call printar_msg_final
     mov eax, ebx
-    jmp printar_mem
-ret:
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
+    call printar_mem
 
     ; Retirar 1 do ebx
     mov [bloco + esi*4], ebx ;Salva endereço final
@@ -93,12 +90,15 @@ espaco_suficiente:
     mov ebx, eax ; 
     mov eax, 0 ; Zerar o eax
     mov [resto], eax
-    jmp cont ;Verificar se deveria ser cont2
+    jmp cont
 
 printar_mem:
+    push eax
+    push ebx
+    push ecx
+    push edx
     mov edi, num + 9   ; Aponta para o final do buffer (última posição antes do NULL)
     mov byte [edi], 0  ; Adiciona terminador NULL
-    jmp convert_loop
 
 convert_loop:
     mov edx, 0         ; Zerar EDX para divisão correta
@@ -132,47 +132,124 @@ convert_loop:
     mov edx, 1
     int 0x80
 
-    jmp ret
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
 
-printar_mem2:
-    mov edi, num + 9   ; Aponta para o final do buffer (última posição antes do NULL)
-    mov byte [edi], 0  ; Adiciona terminador NULL
-    jmp convert_loop2
+    ret
 
-convert_loop2:
-    mov edx, 0         ; Zerar EDX para divisão correta
-    mov ecx, 10        ; Divisor = 10
-    div ecx            ; EAX /= 10, EDX = resto (dígito atual)
-    
-    add dl, '0'        ; Converter o número para caractere ASCII
-    dec edi            ; Mover ponteiro para frente
-    mov [edi], dl      ; Armazenar caractere no buffer
-    
-    test eax, eax      ; Verifica se EAX ainda tem dígitos
-    jnz convert_loop2   ; Se sim, continuar loop
+printar_msg_inicio:
+    push eax
+    push ebx
+    push ecx
+    push edx
 
-    ; Agora, EDI aponta para o início da string convertida.
-    
-    ; Exibir número convertido na saída padrão (opcional)
-    mov eax, 4        ; syscall: sys_write
-    mov ebx, 1        ; saída padrão (stdout)
-    mov ecx, edi      ; ponteiro para string convertida
-    ;mov edx, num + 10 - edi  ; tamanho da string
-    mov edx, 0
-    add edx, num
-    add edx, 10
-    sub edx, edi
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_inicio_bloco
+    mov edx, tam_msg_inicio_bloco
     int 0x80
 
-    ; Exibir nova linha
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+
+printar_msg_final:
+    push eax
+    push ebx
+    push ecx
+    push edx
+
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_final_bloco
+    mov edx, tam_msg_final_bloco
+    int 0x80
+
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+
+printar_msg_resto:
+    push eax
+    push ebx
+    push ecx
+    push edx
+
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_resto
+    mov edx, tam_msg_resto
+    int 0x80
+
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+
+printar_msg_final1:
+    push eax
+    push ebx
+    push ecx
+    push edx
+
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_final1
+    mov edx, tam_msg_final1
+    int 0x80
+
     mov eax, 4
     mov ebx, 1
     mov ecx, newline
     mov edx, 1
     int 0x80
 
-    jmp ret2
 
-fim:    
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+
+printar_msg_final2:
+    push eax
+    push ebx
+    push ecx
+    push edx
+
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_final2
+    mov edx, tam_msg_final2
+    int 0x80
+
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, newline
+    mov edx, 1
+    int 0x80
+
+
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+
+fim:
+    cmp byte [resto], 0
+    je op2
+    call printar_msg_final2
+    pop ebp
+    ret
+op2:
+    call printar_msg_final1
     pop ebp
     ret
