@@ -69,6 +69,7 @@ loop:
 
 cont:
     call printar_msg_final
+    sub ebx, 1
     mov eax, ebx
     call printar_mem
 
@@ -85,6 +86,7 @@ espaco_suficiente:
     add eax, [resto] ;Soma o tamanho do código restante
 
     ;Retirar 1 do eax
+    ;sub eax, 1
 
     add [bloco + esi*4], eax    ;Salvo no array bloco referente a sua posição
     mov ebx, eax ; 

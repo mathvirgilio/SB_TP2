@@ -10,13 +10,13 @@ OBS: Foi necessário instalar: sudo apt install gcc-multilib libc6-dev-i386
 
 #Executar código em C
 ./carregador 125 100 500 4000 300
-./carregador 125 100 500 4000 300 20000
-./carregador 125 100 500 4000 300 20000 125 30000 345
+./carregador 125 100 500 4000 300 20000         #Dará mensagem de falta de parâmetros
+./carregador 1250 100 500 4000 300 20000 500
+./carregador 1250 100 500 4000 300 20000 250
 
+Formato da saída:
 
-LEMBRETES:
-    - Apagar printf
-    - Tirar 1 da memória
-    - Adicionar string que informem "Início da memória do bloco" e "Final da memória do bloco"
-    - Indicar qual bloco: registrador esi
-    - Adicionar se os blocos não memória o suficiente (checar variável resto)
+    - Memória do programa restante (não distribuida entre os blocos) printada antes de cada bloco percorrido;
+    - Endereço inicial do bloco, seguindo a ordem do comando;
+    - Se toda memória não tiver sido distribuida ainda, endereço final do bloco.
+
